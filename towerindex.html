@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Башня</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      touch-action: none;
+    }
+
+    body {
+      background-color: #f9f9f9;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #game-container {
+      position: relative;
+      width: 300px;
+      height: 600px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    #game-canvas {
+      display: block;
+      background: #fff;
+    }
+
+    #ui {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      color: #c00;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    #restart-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #e63946;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      padding: 8px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(230, 57, 70, 0.4);
+      transition: background 0.2s;
+    }
+
+    #restart-btn:hover {
+      background: #d90429;
+    }
+
+    #restart-btn:active {
+      transform: translate(-50%, 2px);
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="ui">
+      <div>Счёт: <span id="score">0</span></div>
+      <div>Уровень: <span id="level">1</span></div>
+    </div>
+    <canvas id="game-canvas" width="300" height="600"></canvas>
+    <button id="restart-btn">🔄 Новая игра</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const levelEl = document.getElementById('level');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Настройки игры
+    const COLORS = ['#e63946', '#d90429', '#f15a5a', '#ff6b6b'];
+    const BASE_WIDTH = 200;
+    const BLOCK_HEIGHT = 30;
+    const BASE_SPEED = 2;
+    const SPEED_INCREMENT = 0.5;
+    const MAX_SPEED = 12;
+
+    let gameState = {
+      score: 0,
+      level: 1,
+      speed: BASE_SPEED,
+      direction: 1, // 1 — вправо, -1 — влево
+      gameRunning: true,
+      blocks: []
+    };
+
+    // Базовый блок (основание)
+    let baseBlock = {
+      x: (canvas.width - BASE_WIDTH) / 2,
+      y: canvas.height - BLOCK_HEIGHT,
+      width: BASE_WIDTH,
+      height: BLOCK_HEIGHT
+    };
+
+    // Инициализация игры
+    function initGame() {
+      gameState = {
+        score: 0,
+        level: 1,
+        speed: BASE_SPEED,
+        direction: 1,
+        gameRunning: true,
+        blocks: []
+      };
+      baseBlock = {
+        x: (canvas.width - BASE_WIDTH) / 2,
+        y: canvas.height - BLOCK_HEIGHT,
+        width: BASE_WIDTH,
+        height: BLOCK_HEIGHT
+      };
+      scoreEl.textContent = '0';
+      levelEl.textContent = '1';
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Создаём новый блок
+    function createBlock() {
+      const lastBlock = gameState.blocks.length > 0 
+        ? gameState.blocks[gameState.blocks.length - 1] 
+        : baseBlock;
+
+      const newBlock = {
+        x: lastBlock.x,
+        y: lastBlock.y - BLOCK_HEIGHT,
+        width: lastBlock.width,
+        height: BLOCK_HEIGHT,
+        velocity: gameState.speed * gameState.direction
+      };
+
+      gameState.blocks.push(newBlock);
+    }
+
+    // Обновление позиции текущего верхнего блока
+    function updateFallingBlock() {
+      if (gameState.blocks.length === 0) return;
+      const block = gameState.blocks[gameState.blocks.length - 1];
+      block.x += block.velocity;
+
+      // Отскок от стенок
+      if (block.x <= 0 || block.x + block.width >= canvas.width) {
+        block.velocity *= -1;
+        gameState.direction *= -1;
+      }
+    }
+
+    // Фиксация блока (если клик/тап или просто автоматически после паузы)
+    function placeBlock() {
+      if (gameState.blocks.length === 0 || !gameState.gameRunning) return;
+
+      const movingBlock = gameState.blocks[gameState.blocks.length - 1];
+      const targetBlock = gameState.blocks.length > 1 
+        ? gameState.blocks[gameState.blocks.length - 2] 
+        : baseBlock;
+
+      // Пересечение по X
+      const overlapStart = Math.max(movingBlock.x, targetBlock.x);
+      const overlapEnd = Math.min(movingBlock.x + movingBlock.width, targetBlock.x + targetBlock.width);
+      const overlap = overlapEnd - overlapStart;
+
+      if (overlap <= 0) {
+        // Провал
+        gameState.gameRunning = false;
+        return;
+      }
+
+      // Обрезаем блок по пересечению
+      movingBlock.x = overlapStart;
+      movingBlock.width = overlap;
+
+      // Увеличиваем счёт и уровень
+      gameState.score++;
+      scoreEl.textContent = gameState.score;
+
+      if (gameState.score % 3 === 0) {
+        gameState.level++;
+        levelEl.textContent = gameState.level;
+        gameState.speed = Math.min(BASE_SPEED + (gameState.level - 1) * SPEED_INCREMENT, MAX_SPEED);
+      }
+
+      // Создаём следующий блок
+      setTimeout(createBlock, 500);
+    }
+
+    // Рендер
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Рисуем базу
+      ctx.fillStyle = COLORS[0];
+      ctx.fillRect(baseBlock.x, baseBlock.y, baseBlock.width, baseBlock.height);
+
+      // Рисуем блоки
+      gameState.blocks.forEach((block, i) => {
+        ctx.fillStyle = COLORS[(i + 1) % COLORS.length];
+        ctx.fillRect(block.x, block.y, block.width, block.height);
+      });
+    }
+
+    // Основной цикл игры
+    let lastTime = 0;
+    function gameLoop(timestamp) {
+      const deltaTime = timestamp - lastTime;
+      lastTime = timestamp;
+
+      if (gameState.gameRunning) {
+        if (gameState.blocks.length === 0) {
+          createBlock();
+        } else {
+          updateFallingBlock();
+        }
+        render();
+        requestAnimationFrame(gameLoop);
+      } else {
+        render(); // Показываем финальное состояние
+      }
+    }
+
+    // Управление: клик/тап — поставить блок
+    canvas.addEventListener('click', () => {
+      if (gameState.gameRunning && gameState.blocks.length > 0) {
+        placeBlock();
+      }
+    });
+
+    // Для мобильных: тап
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (gameState.gameRunning && gameState.blocks.length > 0) {
+        placeBlock();
+      }
+    });
+
+    restartBtn.addEventListener('click', initGame);
+
+    // Запуск игры
+    initGame();
+  </script>
+</body>
+</html>
