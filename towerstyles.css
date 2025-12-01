@@ -1,0 +1,138 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at top, #333 0, #050505 50%, #000 100%);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 20px;
+}
+
+/* UI */
+.ui {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 10px;
+  font-size: 26px;
+}
+
+.menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+button {  border: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+.difficulty span {
+  font-size: 14px;
+}
+
+.score-panel {
+  font-size: 14px;
+}
+
+/* Game area */
+#game-container {
+  width: 400px;
+  height: 500px;
+  border-radius: 18px;
+  margin-top: 16px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(to top, #111 0, #1b1b1b 40%, #252525 100%);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+}
+
+#scene {
+  width: 100%;
+  height: 100%;
+  perspective: 900px;
+  perspective-origin: 50% 40%;
+  position: relative;
+}
+
+#tower {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  transform-style: preserve-3d;
+  transform: rotateX(65deg) rotateZ(-35deg) translateY(80px);
+}
+
+/* Blocks */
+.block {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+.block-face {
+  position: absolute;
+  background: linear-gradient(135deg, #ffb347, #ffcc33);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.block-face.top {
+  background: radial-gradient(circle at 30% 30%, #ffe29f, #ffa99f);
+}
+
+/* Overlay */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.overlay-content {
+  background: rgba(15, 15, 15, 0.9);
+  padding: 20px 28px;
+  border-radius: 16px;
+  text-align: center;
+  min-width: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.overlay h2 {
+  margin-bottom: 8px;
+}
